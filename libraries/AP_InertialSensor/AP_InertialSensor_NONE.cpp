@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <GCS_MAVLink/GCS.h>
 
-#if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_MOWZE
+#if CONFIG_HAL_BOARD == HAL_BOARD_ESP32
 
 
 static float sim_rand_float(void)

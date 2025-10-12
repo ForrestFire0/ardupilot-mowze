@@ -259,7 +259,8 @@ void AP_InertialSensor_Invensensev3::start()
 {
     // pre-fetch instance numbers for checking fast sampling settings
     if (!_imu.get_gyro_instance(gyro_instance) || !_imu.get_accel_instance(accel_instance)) {
-        return;
+        hal.console->printf("Failed to allocate gyro/accel instances\n");
+	    return;
     }
     WITH_SEMAPHORE(dev->get_semaphore());
 
@@ -412,6 +413,7 @@ bool AP_InertialSensor_Invensensev3::get_output_banner(char* banner, uint8_t ban
  */
 bool AP_InertialSensor_Invensensev3::update()
 {
+	hal.console->printf("update() running\n");
     update_accel(accel_instance);
     update_gyro(gyro_instance);
     _publish_temperature(accel_instance, temp_filtered);
@@ -447,6 +449,7 @@ bool AP_InertialSensor_Invensensev3::accumulate_samples(const FIFOData *data, ui
 #if INV3_ENABLE_FIFO_LOGGING
     const uint64_t tstart = AP_HAL::micros64();
 #endif
+    hal.console->printf("accumulate_samples called: n_samples=%u\n", n_samples);
     for (uint8_t i = 0; i < n_samples; i++) {
         const FIFOData &d = data[i];
 

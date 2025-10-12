@@ -1303,7 +1303,7 @@ AP_InertialSensor::detect_backends(void)
     if (_backend_count == 0) {
 
         // no real INS backends avail, lets use an empty substitute to boot ok and get to mavlink
-        #if CONFIG_HAL_BOARD_SUBTYPE == HAL_BOARD_SUBTYPE_LINUX_MOWZE
+        #if CONFIG_HAL_BOARD == HAL_BOARD_ESP32
         ADD_BACKEND(AP_InertialSensor_NONE::detect(*this, INS_NONE_SENSOR_A));
         #else
         DEV_PRINTF("INS: unable to initialise driver\n");
@@ -1714,6 +1714,8 @@ AP_InertialSensor::_init_gyro()
     enum Rotation saved_orientation = _board_orientation;
     _board_orientation = ROTATION_NONE;
 
+	DEV_PRINTF("Offsets?");
+
     // remove existing gyro offsets
     for (uint8_t k=0; k<num_gyros; k++) {
         _gyro_offset(k).set(Vector3f());
@@ -1723,10 +1725,14 @@ AP_InertialSensor::_init_gyro()
         converged[k] = false;
     }
 
+	DEV_PRINTF("Calling update here");
+
     for(int8_t c = 0; c < 5; c++) {
         hal.scheduler->delay(5);
         update();
     }
+
+	DEV_PRINTF("Past update");
 
 #if HAL_INS_TEMPERATURE_CAL_ENABLE
     // get start temperature. gyro cal usually happens when the board
