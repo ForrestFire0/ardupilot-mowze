@@ -288,7 +288,7 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
     }
     float dt;
 
-    hal.console->printf("Running da function\n");
+    hal.console->printf("Notify new raw gyro sample\n");
     _update_sensor_rate(_imu._sample_gyro_count[instance], _imu._sample_gyro_start_us[instance],
                         _imu._gyro_raw_sample_rates[instance]);
 

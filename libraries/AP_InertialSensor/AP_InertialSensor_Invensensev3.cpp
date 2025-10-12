@@ -459,14 +459,23 @@ bool AP_InertialSensor_Invensensev3::accumulate_samples(const FIFOData *data, ui
         // ICM42688 - HEADER_TIMESTAMP_FSYNC bit 2-3 : 10
         if ((d.header & 0xFC) != 0x68) { // ACCEL_EN | GYRO_EN | TMST_FIELD_EN
             // no or bad data
+	    hal.console->printf("Bad FIFO header: 0x%02X\n", d.header);
             return false;
         }
+	else {
+		hal.console->printf("Good header!\n");
+	}
 
         Vector3f accel{float(d.accel[0]), float(d.accel[1]), float(d.accel[2])};
         Vector3f gyro{float(d.gyro[0]), float(d.gyro[1]), float(d.gyro[2])};
 
         accel *= accel_scale;
         gyro *= gyro_scale;
+
+	hal.console->printf("Accel raw: X=%f Y=%f Z=%f\n", accel.x, accel.y, accel.z);
+	hal.console->printf("Gyro raw:  X=%f Y=%f Z=%f\n", gyro.x, gyro.y, gyro.z);
+
+
 
 #if INV3_ENABLE_FIFO_LOGGING
         Write_GYR(gyro_instance, tstart+(i*backend_period_us), gyro, true);
@@ -587,6 +596,7 @@ void AP_InertialSensor_Invensensev3::read_fifo()
     }
 
     if (n_samples == 0) {
+	hal.console->print("Zero samples\n");
         /* Not enough data in FIFO */
         goto check_registers;
     }
@@ -607,10 +617,15 @@ void AP_InertialSensor_Invensensev3::read_fifo()
         tfr_buffer[0] = reg_data | BIT_READ_FLAG;
         // transfer will also be sending data, make sure that data is zero
         memset(tfr_buffer + 1, 0, n * fifo_sample_size);
+	if (dev->bus_type() == AP_HAL::Device::BUS_TYPE_SPI) {
+		    samples = tfr_buffer + 1;   // skip dummy byte (SPI only)
+	} 
+	else {
+		samples = tfr_buffer;       // I2C: first byte is valid data
+		}
         if (!dev->transfer_fullduplex(tfr_buffer, n * fifo_sample_size + 1)) {
             goto check_registers;
         }
-        samples = tfr_buffer + 1;
 
 #if HAL_INS_HIGHRES_SAMPLE
         if (highres_sampling) {
@@ -620,6 +635,12 @@ void AP_InertialSensor_Invensensev3::read_fifo()
             }
         } else
 #endif
+	hal.console->printf("First two bytes raw: %02X %02X\n", tfr_buffer[0], tfr_buffer[1]);	
+	hal.console->printf("Next bytes: ");
+	for (int i = 0; i < 16; i++) {
+		    hal.console->printf("%02X ", samples[i]);
+	}
+	hal.console->printf("\n");
         if (!accumulate_samples((FIFOData*)samples, n)) {
             need_reset = true;
             break;
@@ -980,6 +1001,14 @@ void AP_InertialSensor_Invensensev3::set_filter_and_scaling_icm456xy(void)
         fifo_config |= (1U<<3);  // FIFO_HIRES_EN
     }
 #endif
+
+	register_write_bank_icm456xy(0x0300, 0x80, 0x00);  // SMC_SENSOR_EN_0
+	register_write_bank_icm456xy(0x0300, 0x81, 0x00);  // SMC_SENSOR_EN_1
+	register_write_bank_icm456xy(0x0300, 0x82, 0x00);  // SMC_SENSOR_EN_2
+	register_write_bank_icm456xy(0x0300, 0x83, 0x00);  // SMC_SENSOR_EN_3
+	register_write_bank_icm456xy(0x0300, 0x84, 0x00);  // SMC_SENSOR_EN_4
+	register_write_bank_icm456xy(0x0300, 0x85, 0x00);  // SMC_SENSOR_EN_5
+
     // enable FIFO for each sensor
     register_write(INV3REG_456_FIFO_CONFIG3, fifo_config, true);
 
@@ -1034,6 +1063,7 @@ bool AP_InertialSensor_Invensensev3::check_whoami(void)
     switch (whoami) {
     case INV3_ID_ICM45686:
         inv3_type = Invensensev3_Type::ICM45686;
+	hal.console->printf("WhoAmI register read\n");
         return true;
     }
     // not a value WHOAMI result
