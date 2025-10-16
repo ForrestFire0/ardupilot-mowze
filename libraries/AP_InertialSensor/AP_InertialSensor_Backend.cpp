@@ -288,7 +288,6 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
     }
     float dt;
 
-    hal.console->printf("Notify new raw gyro sample\n");
     _update_sensor_rate(_imu._sample_gyro_count[instance], _imu._sample_gyro_start_us[instance],
                         _imu._gyro_raw_sample_rates[instance]);
 
@@ -792,7 +791,6 @@ void AP_InertialSensor_Backend::update_gyro(uint8_t instance) /* front end */
     }
 
     if (_imu._new_gyro_data[instance]) {
-	hal.console->printf("Backend has new data, publishing now \n");
         _publish_gyro(instance, _imu._gyro_filtered[instance]);
 #if HAL_GYROFFT_ENABLED
         // copy the gyro samples from the backend to the frontend window for FFTs sampling at less than IMU rate

@@ -259,7 +259,6 @@ void AP_InertialSensor_Invensensev3::start()
 {
     // pre-fetch instance numbers for checking fast sampling settings
     if (!_imu.get_gyro_instance(gyro_instance) || !_imu.get_accel_instance(accel_instance)) {
-        hal.console->printf("Failed to allocate gyro/accel instances\n");
 	    return;
     }
     WITH_SEMAPHORE(dev->get_semaphore());
@@ -413,7 +412,6 @@ bool AP_InertialSensor_Invensensev3::get_output_banner(char* banner, uint8_t ban
  */
 bool AP_InertialSensor_Invensensev3::update()
 {
-	hal.console->printf("update() running\n");
     update_accel(accel_instance);
     update_gyro(gyro_instance);
     _publish_temperature(accel_instance, temp_filtered);
@@ -449,7 +447,6 @@ bool AP_InertialSensor_Invensensev3::accumulate_samples(const FIFOData *data, ui
 #if INV3_ENABLE_FIFO_LOGGING
     const uint64_t tstart = AP_HAL::micros64();
 #endif
-    hal.console->printf("accumulate_samples called: n_samples=%u\n", n_samples);
     for (uint8_t i = 0; i < n_samples; i++) {
         const FIFOData &d = data[i];
 
@@ -459,12 +456,8 @@ bool AP_InertialSensor_Invensensev3::accumulate_samples(const FIFOData *data, ui
         // ICM42688 - HEADER_TIMESTAMP_FSYNC bit 2-3 : 10
         if ((d.header & 0xFC) != 0x68) { // ACCEL_EN | GYRO_EN | TMST_FIELD_EN
             // no or bad data
-	    hal.console->printf("Bad FIFO header: 0x%02X\n", d.header);
             return false;
         }
-	else {
-		hal.console->printf("Good header!\n");
-	}
 
         Vector3f accel{float(d.accel[0]), float(d.accel[1]), float(d.accel[2])};
         Vector3f gyro{float(d.gyro[0]), float(d.gyro[1]), float(d.gyro[2])};
@@ -472,8 +465,6 @@ bool AP_InertialSensor_Invensensev3::accumulate_samples(const FIFOData *data, ui
         accel *= accel_scale;
         gyro *= gyro_scale;
 
-	hal.console->printf("Accel raw: X=%f Y=%f Z=%f\n", accel.x, accel.y, accel.z);
-	hal.console->printf("Gyro raw:  X=%f Y=%f Z=%f\n", gyro.x, gyro.y, gyro.z);
 
 
 
@@ -596,7 +587,6 @@ void AP_InertialSensor_Invensensev3::read_fifo()
     }
 
     if (n_samples == 0) {
-	hal.console->print("Zero samples\n");
         /* Not enough data in FIFO */
         goto check_registers;
     }
@@ -635,12 +625,8 @@ void AP_InertialSensor_Invensensev3::read_fifo()
             }
         } else
 #endif
-	hal.console->printf("First two bytes raw: %02X %02X\n", tfr_buffer[0], tfr_buffer[1]);	
-	hal.console->printf("Next bytes: ");
 	for (int i = 0; i < 16; i++) {
-		    hal.console->printf("%02X ", samples[i]);
 	}
-	hal.console->printf("\n");
         if (!accumulate_samples((FIFOData*)samples, n)) {
             need_reset = true;
             break;
@@ -1063,7 +1049,6 @@ bool AP_InertialSensor_Invensensev3::check_whoami(void)
     switch (whoami) {
     case INV3_ID_ICM45686:
         inv3_type = Invensensev3_Type::ICM45686;
-	hal.console->printf("WhoAmI register read\n");
         return true;
     }
     // not a value WHOAMI result
