@@ -283,7 +283,6 @@ void AP_InertialSensor_Backend::_notify_new_gyro_raw_sample(uint8_t instance,
                                                             uint64_t sample_us)
 {
     if (has_been_killed(instance)) {
-	    	hal.console->printf("Has been killed is triggering \n");
         	return;
     }
     float dt;
