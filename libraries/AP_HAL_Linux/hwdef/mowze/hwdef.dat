@@ -6,7 +6,7 @@ env TOOLCHAIN aarch64-linux-gnu
 env OPTIMIZE -fomit-frame-pointer -ftree-vectorize
 
 # IMU
-IMU Invensensev3 SPI:icm42688 ROTATION_NONE
+IMU Invensensev3 SPI:icm42688 ROTATION_PITCH_180
 
 # GPIO
 define HAL_LINUX_GPIO_RPI_ENABLED 1
